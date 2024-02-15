@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "cwd": "${workspaceFolder}/src/producer/",
+            "purpose": ["debug-in-terminal"],
+            "args": [
+                // Replace "main" with the name of your Python file without the .py extension
+                "app:app", 
+                "--reload"
+            ],
+            "jinja": true,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug Consumer",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/consumer/",
+            "purpose": ["debug-in-terminal"],
+            "program": "${workspaceFolder}/src/consumer/consumer.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONUNBUFFERED": "1"
+            }
+        }
+    ]
+}
