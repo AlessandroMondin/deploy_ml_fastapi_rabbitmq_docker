@@ -27,6 +27,18 @@
             "env": {
                 "PYTHONUNBUFFERED": "1"
             }
+        },
+        {
+            "name": "Debug Classifier",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/consumer/",
+            "purpose": ["debug-in-terminal"],
+            "program": "${workspaceFolder}/src/consumer/classifier.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONUNBUFFERED": "1"
+            }
         }
     ]
 }
