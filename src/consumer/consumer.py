@@ -11,7 +11,7 @@ channel = connection.channel()
 
 channel.queue_declare(queue="rpc_queue", durable=True)
 
-model = ImageClassifier("mobilenet_v3_large.onnx")
+model = ImageClassifier()
 
 
 def on_request(ch, method, props, body):
