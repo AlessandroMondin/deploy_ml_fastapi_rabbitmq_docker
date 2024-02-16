@@ -11,7 +11,7 @@ channel = connection.channel()
 
 channel.queue_declare(queue="rpc_queue", durable=True)
 
-model = ImageClassifier()
+model = ImageClassifier("vit_b_16_large.onnx")
 
 
 def on_request(ch, method, props, body):
