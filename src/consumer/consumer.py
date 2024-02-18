@@ -1,17 +1,28 @@
 import base64
 import cv2
 import numpy as np
+import os
 import pika
 
 from classifier import ImageClassifier
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+rabbitmq_user = os.getenv("RABBITMQ_DEFAULT_USER")
+rabbitmq_pass = os.getenv("RABBITMQ_DEFAULT_PASS")
+rabbitmq_host = os.getenv("HOSTNAMERABBIT")
+
+credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
+parameters = pika.ConnectionParameters(
+    host=rabbitmq_host, port=5672, virtual_host="/", credentials=credentials
+)
+
+connection = pika.BlockingConnection(parameters)
+
 
 channel = connection.channel()
 
 channel.queue_declare(queue="rpc_queue", durable=True)
 
-model = ImageClassifier("vit_b_16_large.onnx")
+model = ImageClassifier("mobilenet_v3_large.onnx")
 
 
 def on_request(ch, method, props, body):

@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:3.9-management
+    command: rabbitmq-server
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./src/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./src/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+
+  producer:
+    image: producer
+    build:
+      context: ./src/producer
+      dockerfile: Dockerfile
+    environment:
+      - HOSTNAMERABBIT=rabbitmq
+      - RABBITMQ_DEFAULT_USER=local_jobs
+      - RABBITMQ_DEFAULT_PASS=password
+    ports: 
+      - "8000:8000"
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    links: 
+        - rabbitmq
+
+  consumer:
+    image: consumer
+    build:
+      context: ./src/consumer
+      dockerfile: Dockerfile
+    environment:
+      - HOSTNAMERABBIT=rabbitmq
+      - RABBITMQ_DEFAULT_USER=local_jobs
+      - RABBITMQ_DEFAULT_PASS=password
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    links: 
+        - rabbitmq
