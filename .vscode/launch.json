@@ -6,6 +6,13 @@
             "type": "python",
             "request": "launch",
             "module": "uvicorn",
+            "env": {
+                "CALLBACK_URL": "http://localhost:8000/receive/",
+                "TIMEOUT": "4",
+                "HOSTNAMERABBIT": "localhost",
+                "RABBITMQ_DEFAULT_USER": "guest",
+                "RABBITMQ_DEFAULT_PASS": "guest"
+            },
             "cwd": "${workspaceFolder}/src/producer/",
             "purpose": ["debug-in-terminal"],
             "args": [
@@ -20,13 +27,17 @@
             "name": "Debug Consumer",
             "type": "python",
             "request": "launch",
+            "env": {
+                "MAX_BATCH_SIZE": "8",
+                "BATCH_TIMEOUT": "0.1",
+                "HOSTNAMERABBIT": "localhost",
+                "RABBITMQ_DEFAULT_USER": "guest",
+                "RABBITMQ_DEFAULT_PASS": "guest"
+            },
             "cwd": "${workspaceFolder}/src/consumer/",
             "purpose": ["debug-in-terminal"],
             "program": "${workspaceFolder}/src/consumer/consumer.py",
             "console": "integratedTerminal",
-            "env": {
-                "PYTHONUNBUFFERED": "1"
-            }
         },
         {
             "name": "Debug Classifier",
@@ -37,8 +48,10 @@
             "program": "${workspaceFolder}/src/consumer/classifier.py",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONUNBUFFERED": "1"
-            }
+                "HOSTNAMERABBIT": "localhost",
+                "RABBITMQ_DEFAULT_USER": "guest",
+                "RABBITMQ_DEFAULT_PASS": "guest"
+            },
         }
     ]
 }

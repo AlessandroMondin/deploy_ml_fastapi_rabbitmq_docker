@@ -15,15 +15,21 @@ class ImageClassifier:
     def __init__(self, path_to_onnx) -> None:
         self.session = ort.InferenceSession(path_to_onnx)
 
-    def __call__(self, img: np.ndarray) -> List:
-        img = self.preprocess_image(img)
-        # Run the model
-        outputs = self.session.run(None, {"input": img})
-        logs = self.softmax(outputs[0]).flatten()
-        top5 = np.argpartition(logs, -5)[-5:]
-        top_5_labels = [self.js[id].split(",")[0] for id in top5]
+    def __call__(self, imgs: List[np.ndarray]) -> List:
+        imgs = [self.preprocess_image(img) for img in imgs]
+        imgs = np.concatenate(imgs, axis=0)
+        outputs = self.session.run(None, {"input": imgs})[0]
+        # Apply softmax to outputs; ensure it's applied to each output vector separately
+        probs = self.softmax(outputs)
 
-        return top_5_labels
+        # Determine top 5 labels for each image in the batch
+        top_5_labels_batch = []
+        for log in probs:
+            top5 = np.argpartition(log, -5)[-5:]
+            top_5_labels = [self.js[id].split(",")[0] for id in top5]
+            top_5_labels_batch.append(top_5_labels)
+
+        return top_5_labels_batch
 
     def preprocess_image(self, img: np.ndarray) -> np.ndarray:
         # Load the image
@@ -52,20 +58,6 @@ class ImageClassifier:
         return img
 
     def softmax(self, x):
-        """Compute softmax values for each sets of scores in x."""
-        e_x = np.exp(x - np.max(x))
-        return e_x / e_x.sum()
-
-
-if __name__ == "__main__":
-    # Load and preprocess the labels for ImageNet
-    with open("imagenet1000_clsidx_to_labels.txt") as f:
-        data = f.read()
-    js = ast.literal_eval(data)
-
-    model = ImageClassifier("mobilenet_v3_large.onnx")
-    img = cv2.imread("/Users/alessandro/rabbit-mq-exp/data/tiger_shark.jpg")
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    output = model(img)
-
-    print(output)
+        """Compute softmax values for each set of scores in x along the last axis."""
+        e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        return e_x / e_x.sum(axis=-1, keepdims=True)
