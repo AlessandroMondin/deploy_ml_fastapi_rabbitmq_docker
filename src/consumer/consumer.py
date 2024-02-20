@@ -1,36 +1,41 @@
 import base64
+import os
+
 import cv2
 import numpy as np
-import os
 import pika
 
 from classifier import ImageClassifier
 from batch_handler import PikaBatchHandler
 
+from logger import get_logger
+
+logger = get_logger(__name__)
+
+# LOAD ENVIRONMENT VARIABLES
+MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE"))
+BATCH_TIMEOUT = float(os.getenv("BATCH_TIMEOUT"))
 rabbitmq_user = os.getenv("RABBITMQ_DEFAULT_USER")
 rabbitmq_pass = os.getenv("RABBITMQ_DEFAULT_PASS")
 rabbitmq_host = os.getenv("HOSTNAMERABBIT")
 
-MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE"))
-BATCH_TIMEOUT = float(os.getenv("BATCH_TIMEOUT"))
 
-batch = []
-batch_props = []
-
+# LOAD RABBITMQ (pika) PARAMETERS
 credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
 parameters = pika.ConnectionParameters(
-    host=rabbitmq_host, port=5672, virtual_host="/", credentials=credentials
+    host=rabbitmq_host,
+    port=5672,
+    virtual_host="/",
+    credentials=credentials,
+    heartbeat=600,
 )
-connection = pika.BlockingConnection(parameters)
 
-channel = connection.channel()
-channel.queue_declare(queue="rpc_queue", durable=True)
-
+# LOAD MODEL
 model = ImageClassifier("mobilenet_v3_large.onnx")
 
 
+# CALLBACK FUNCTION EXECUTES BY THE PikaBatchHandler
 def callback(batch: list):
-    # Necessary for the timeout
     if not batch:
         return
     bin_imgs = [base64.b64decode(img) for img in batch]
@@ -40,13 +45,10 @@ def callback(batch: list):
     return outs
 
 
-batch_handler = PikaBatchHandler(
-    channel=channel,
+handler = PikaBatchHandler(
+    pika_connection_parameters=parameters,
     callback_fn=callback,
     max_batch_size=MAX_BATCH_SIZE,
     batch_timeout=BATCH_TIMEOUT,
 )
-
-channel.basic_qos(prefetch_count=MAX_BATCH_SIZE)
-channel.basic_consume(queue="rpc_queue", on_message_callback=batch_handler.on_request)
-channel.start_consuming()
+handler.setup_and_consume()
