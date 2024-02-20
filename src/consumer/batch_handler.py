@@ -1,14 +1,13 @@
 import ast
-import logging
 import requests
 import time
 from typing import Callable
 
 import pika
 
+from logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger = get_logger(__name__)
 
 
 class PikaBatchHandler:
@@ -30,30 +29,28 @@ class PikaBatchHandler:
 
     def on_request(self, ch, method, props, body):
         # print("start at {}".format(time.time()))
-        self.batch.append(body)
+        self.batch.append(ast.literal_eval(body.decode("utf-8")))
         self.queue_tags.append(method)
         # If the batch is completed we process it
         if (
             len(self.batch) == self.max_batch_size
             or (time.time() - self.time_first_item) > self.batch_timeout
         ):
-            self.process()
+            self.process_messages()
         # Otherwise after the first element is added to the batch,
         # we process it after BATCH_TIMEOUT seconds
         elif len(self.batch) == 1:
             self.time_first_item = time.time()
 
-    def process(self):
-        self.batch = [ast.literal_eval(body.decode("utf-8")) for body in self.batch]
-        images = [body["file"] for body in self.batch]
-        outs = self.callback_fn(images)
-
+    def process_messages(self):
+        outs = self.callback_fn(self.batch)
         # Publish results
         for idx, result in enumerate(outs):
+            # remove file key
             self.batch[idx].pop("file")
+            # add predictions key
             self.batch[idx]["predictions"] = result
             data = self.batch[idx]
-            # print("end at {}".format(time.time()))
             r = requests.post(self.batch[idx]["callback_url"], json=data)
             if r.status_code != 200:
                 logger.warning("Webhook to producer failed")
@@ -67,7 +64,9 @@ class PikaBatchHandler:
         self.queue_tags = []
 
     def setup_and_consume(self):
+        failed_attempts = 0
         while True:
+
             try:
                 connection = pika.BlockingConnection(self.pika_connection_parameters)
                 self.channel = connection.channel()
@@ -80,6 +79,11 @@ class PikaBatchHandler:
 
                 logger.info("Start consuming")
                 self.channel.start_consuming()
+                failed_attempts = 0
             except Exception as e:
+                # Retry connection
                 logger.error(f"Unexpected error: {e}", exc_info=True)
-                continue  # Retry connection
+                failed_attempts += 1
+                if failed_attempts > 50:
+                    logger.error("Initialisation failed. Consumer not working.")
+                    break

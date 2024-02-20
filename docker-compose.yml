@@ -10,6 +10,11 @@ services:
     volumes:
       - ./src/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./src/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   producer:
     image: producer
@@ -17,6 +22,10 @@ services:
       context: ./src/producer
       dockerfile: Dockerfile
     environment:
+      # APPLICATION
+      - CALLBACK_URL=http://localhost:8000/receive/
+      - TIMEOUT=4
+      # RABBITMQ
       - HOSTNAMERABBIT=rabbitmq
       - RABBITMQ_DEFAULT_USER=local_jobs
       - RABBITMQ_DEFAULT_PASS=password
@@ -34,6 +43,10 @@ services:
       context: ./src/consumer
       dockerfile: Dockerfile
     environment:
+      # APPLICATION
+      - MAX_BATCH_SIZE=8
+      - BATCH_TIMEOUT=8
+      # RABBITMQ
       - HOSTNAMERABBIT=rabbitmq
       - RABBITMQ_DEFAULT_USER=local_jobs
       - RABBITMQ_DEFAULT_PASS=password

@@ -1,5 +1,6 @@
 import base64
 import os
+from typing import List
 
 import cv2
 import numpy as np
@@ -19,7 +20,6 @@ rabbitmq_user = os.getenv("RABBITMQ_DEFAULT_USER")
 rabbitmq_pass = os.getenv("RABBITMQ_DEFAULT_PASS")
 rabbitmq_host = os.getenv("HOSTNAMERABBIT")
 
-
 # LOAD RABBITMQ (pika) PARAMETERS
 credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
 parameters = pika.ConnectionParameters(
@@ -35,13 +35,14 @@ model = ImageClassifier("mobilenet_v3_large.onnx")
 
 
 # CALLBACK FUNCTION EXECUTES BY THE PikaBatchHandler
-def callback(batch: list):
+def callback(batch: List) -> List:
     if not batch:
         return
-    bin_imgs = [base64.b64decode(img) for img in batch]
-    nparrs = [np.frombuffer(bin_img, np.uint8) for bin_img in bin_imgs]
-    images = [cv2.imdecode(nparr, cv2.IMREAD_COLOR) for nparr in nparrs]
-    outs = model(images)
+    imgs = [body["file"] for body in batch]
+    imgs = [base64.b64decode(img) for img in imgs]
+    imgs = [np.frombuffer(bin_img, np.uint8) for bin_img in imgs]
+    imgs = [cv2.imdecode(nparr, cv2.IMREAD_COLOR) for nparr in imgs]
+    outs = model(imgs)
     return outs
 
 
