@@ -18,7 +18,7 @@ predictions = {}
 
 @app.post("/receive")
 async def store_predictions(file: dict):
-    print("time received: {}".format(time.time()))
+    # print("time received: {}".format(time.time()))
     if time.time() - file["sent_at"] <= TIMEOUT:
         predictions[file["id"]] = file["predictions"]
 
