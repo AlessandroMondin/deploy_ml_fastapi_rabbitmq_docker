@@ -11,10 +11,12 @@ services:
       - ./src/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./src/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 30s
-      timeout: 30s
-      retries: 3
+        test: ["CMD", "curl", "-f", "http://localhost:15672"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+    networks:
+      - rabbitmq_network
 
   producer:
     image: producer
@@ -23,7 +25,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # APPLICATION
-      - CALLBACK_URL=http://localhost:8000/receive/
+      - CALLBACK_URL=http://producer:8000/receive/
       - TIMEOUT=4
       # RABBITMQ
       - HOSTNAMERABBIT=rabbitmq
@@ -36,6 +38,8 @@ services:
       - rabbitmq
     links: 
         - rabbitmq
+    networks:
+      - rabbitmq_network
 
   consumer:
     image: consumer
@@ -55,3 +59,10 @@ services:
       - rabbitmq
     links: 
         - rabbitmq
+    networks:
+      - rabbitmq_network
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge

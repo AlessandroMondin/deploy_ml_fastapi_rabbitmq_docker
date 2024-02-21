@@ -28,6 +28,8 @@ parameters = pika.ConnectionParameters(
     virtual_host="/",
     credentials=credentials,
     heartbeat=600,
+    # socket timeout might give headaches to troubleshoot
+    socket_timeout=2,
 )
 
 # LOAD MODEL

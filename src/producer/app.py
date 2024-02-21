@@ -26,7 +26,6 @@ async def store_predictions(file: dict):
 # Expects images to be already BASE64 encoded
 @app.post("/predict/")
 async def classify_img(file: UploadFile):
-
     file = await file.read()
     unique_id = str(uuid.uuid4())
     file = file.decode("utf-8")

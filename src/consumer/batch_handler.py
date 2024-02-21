@@ -66,7 +66,6 @@ class PikaBatchHandler:
     def setup_and_consume(self):
         failed_attempts = 0
         while True:
-
             try:
                 connection = pika.BlockingConnection(self.pika_connection_parameters)
                 self.channel = connection.channel()
@@ -76,14 +75,15 @@ class PikaBatchHandler:
                 self.channel.basic_consume(
                     queue="rpc_queue", on_message_callback=self.on_request
                 )
-
+                failed_attempts = 0
                 logger.info("Start consuming")
                 self.channel.start_consuming()
-                failed_attempts = 0
+
             except Exception as e:
                 # Retry connection
                 logger.error(f"Unexpected error: {e}", exc_info=True)
                 failed_attempts += 1
+                time.sleep(1)
                 if failed_attempts > 50:
                     logger.error("Initialisation failed. Consumer not working.")
                     break

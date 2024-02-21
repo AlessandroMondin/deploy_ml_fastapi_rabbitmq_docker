@@ -18,13 +18,13 @@ parameters = pika.ConnectionParameters(
     virtual_host="/",
     credentials=credentials,
     heartbeat=600,
+    # socket timeout might give headaches to troubleshoot
+    socket_timeout=2,
 )
 
 
 class RabbitProducer(object):
-
     def __init__(self):
-
         self.parameters = parameters
         self._connection = None
         self._channel = None
