@@ -11,6 +11,7 @@ logger = get_logger(__name__)
 
 
 class PikaBatchHandler:
+
     def __init__(
         self,
         pika_connection_parameters: pika.ConnectionParameters,
@@ -28,7 +29,6 @@ class PikaBatchHandler:
         self.queue_tags = []
 
     def on_request(self, ch, method, props, body):
-        # print("start at {}".format(time.time()))
         self.batch.append(ast.literal_eval(body.decode("utf-8")))
         self.queue_tags.append(method)
         # If the batch is completed we process it

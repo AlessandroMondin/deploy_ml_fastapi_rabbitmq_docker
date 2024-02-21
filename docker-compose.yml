@@ -49,7 +49,7 @@ services:
     environment:
       # APPLICATION
       - MAX_BATCH_SIZE=8
-      - BATCH_TIMEOUT=8
+      - BATCH_TIMEOUT=0.1
       # RABBITMQ
       - HOSTNAMERABBIT=rabbitmq
       - RABBITMQ_DEFAULT_USER=local_jobs
