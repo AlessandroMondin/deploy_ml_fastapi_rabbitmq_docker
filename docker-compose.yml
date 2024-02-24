@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # APPLICATION
+      - API_KEY=FR3IFDQBI384993D
       - CALLBACK_URL=http://producer:8000/receive/
       - TIMEOUT=4
       # RABBITMQ
@@ -48,6 +49,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # APPLICATION
+      - API_KEY=FR3IFDQBI384993D
       - MAX_BATCH_SIZE=8
       - BATCH_TIMEOUT=0.1
       # RABBITMQ

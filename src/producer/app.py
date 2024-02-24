@@ -3,21 +3,28 @@ import os
 import time
 import uuid
 
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
 
 from producer import RabbitProducer
 
 TIMEOUT = int(os.environ.get("TIMEOUT"))
 CALLBACK_URL = os.environ.get("CALLBACK_URL")
+API_KEY = os.environ.get("API_KEY")
 
 app = FastAPI()
 producer = RabbitProducer()
 predictions = {}
 
 
+async def get_api_key(request_api_key: str = Header(...)):
+    if request_api_key != API_KEY:
+        raise HTTPException(status_code=400, detail="Invalid API Key")
+    return request_api_key
+
+
 @app.post("/receive")
-async def store_predictions(file: dict):
+async def store_predictions(file: dict, api_key: str = Depends(get_api_key)):
     # print("time received: {}".format(time.time()))
     if time.time() - file["sent_at"] <= TIMEOUT:
         predictions[file["id"]] = file["predictions"]

@@ -7,6 +7,7 @@
             "request": "launch",
             "module": "uvicorn",
             "env": {
+                "API_KEY": "FR3IFDQBI384993D",
                 "CALLBACK_URL": "http://localhost:8000/receive/",
                 "TIMEOUT": "4",
                 "HOSTNAMERABBIT": "localhost",
@@ -28,6 +29,7 @@
             "type": "python",
             "request": "launch",
             "env": {
+                "API_KEY": "FR3IFDQBI384993D",
                 "MAX_BATCH_SIZE": "8",
                 "BATCH_TIMEOUT": "0.1",
                 "HOSTNAMERABBIT": "localhost",

@@ -1,6 +1,8 @@
 import ast
-import requests
+import os
 import time
+import requests
+
 from typing import Callable
 
 import pika
@@ -9,8 +11,12 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
+API_KEY = os.environ.get("API_KEY")
+
 
 class PikaBatchHandler:
+
+    api_key = {"request-api-key": API_KEY}
 
     def __init__(
         self,
@@ -51,7 +57,9 @@ class PikaBatchHandler:
             # add predictions key
             self.batch[idx]["predictions"] = result
             data = self.batch[idx]
-            r = requests.post(self.batch[idx]["callback_url"], json=data)
+            r = requests.post(
+                self.batch[idx]["callback_url"], json=data, headers=self.api_key
+            )
             if r.status_code != 200:
                 logger.warning("Webhook to producer failed")
 
