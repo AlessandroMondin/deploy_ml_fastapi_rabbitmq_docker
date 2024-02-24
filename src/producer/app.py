@@ -8,11 +8,19 @@ from fastapi.responses import JSONResponse
 
 from producer import RabbitProducer
 
+ENV = os.environ.get("ENV")
 TIMEOUT = int(os.environ.get("TIMEOUT"))
 CALLBACK_URL = os.environ.get("CALLBACK_URL")
 API_KEY = os.environ.get("API_KEY")
 
 app = FastAPI()
+
+# Only add documentation endpoints if not in production
+if os.environ.get("ENV") != "production":
+    app = FastAPI(docs_url="/docs", redoc_url="/redoc")
+else:
+    app = FastAPI(docs_url=None, redoc_url=None)
+
 producer = RabbitProducer()
 predictions = {}
 
